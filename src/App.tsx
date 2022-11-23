@@ -8,6 +8,7 @@ import matchingMachine from "./machines/matchingV2";
 import { fetchPeople, fetchPlanets } from "./api";
 import List from "./List";
 import { forceMachine } from "./machines/force";
+import { idleMachine } from "./machines/internal";
 
 inspect();
 
@@ -17,9 +18,8 @@ export interface Person {
 }
 
 function App() {
-  const [matchingState, sendToMatchingMachine] = useMachine(matchingMachine, {
-    devTools: true,
-  });
+  const [] = useMachine(idleMachine, { devTools: true });
+  const [matchingState, sendToMatchingMachine] = useMachine(matchingMachine);
   const [darkSidePower, setDarkSidePower] = useState<number>(0);
   const [forceState, sendToForceMachine] = useMachine(forceMachine, {
     activities: {
