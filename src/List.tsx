@@ -3,14 +3,20 @@ import React, { useEffect } from "react";
 import "./List.css";
 import fetchMachine from "./machines/fetchV3";
 
+function randomValue(amplitude: number): number {
+  return Math.random() * amplitude - amplitude / 2;
+}
+
 export function List({
   fetchData,
   selectedItem,
   onSelection,
+  darkSidePower,
 }: {
   fetchData: () => Promise<{ results: any[] }>;
   selectedItem: any;
   onSelection: (item: any) => void;
+  darkSidePower: number;
 }) {
   const [fetchDataState, sendToDataMachine] = useMachine(fetchMachine, {
     services: {
@@ -31,7 +37,16 @@ export function List({
         <ul>
           {fetchDataState.context.results &&
             fetchDataState.context.results.map((item, index) => (
-              <li key={index}>
+              <li
+                key={index}
+                style={{
+                  position: "relative",
+                  top: randomValue(darkSidePower),
+                  left: randomValue(darkSidePower),
+                  transform: `rotate(${randomValue(darkSidePower)}deg)`,
+                  transition: "all 1s ease",
+                }}
+              >
                 <button
                   className={
                     "list-button " + (selectedItem === item ? "selected" : "")

@@ -1,12 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import "./App.css";
 
 import { useMachine } from "@xstate/react";
 import { inspect } from "@xstate/inspect";
 
-import matchingMachine from "./machines/matchingV1";
+import matchingMachine from "./machines/matchingV2";
 import { fetchPeople, fetchPlanets } from "./api";
 import List from "./List";
+import { forceMachine } from "./machines/force";
 
 inspect();
 
@@ -19,18 +20,49 @@ function App() {
   const [matchingState, sendToMatchingMachine] = useMachine(matchingMachine, {
     devTools: true,
   });
+  const [darkSidePower, setDarkSidePower] = useState<number>(0);
+  const [forceState, sendToForceMachine] = useMachine(forceMachine, {
+    activities: {
+      theDarknessGrows: (ctx) => {
+        // entering dark state
+        setDarkSidePower(10);
+        const interval = setInterval(
+          () => setDarkSidePower((power) => power + 10),
+          600
+        );
+        return () => {
+          // leaving dark state
+          setDarkSidePower(0);
+          clearInterval(interval);
+        };
+      },
+    },
+  });
 
   return (
     <div className="App">
-      {matchingState.matches("answering") ? (
+      {matchingState.matches("quiz.answering") ? (
         <>
+          <button onClick={() => sendToMatchingMachine({ type: "CONTINUE" })}>
+            Continue
+          </button>
+          {forceState.matches("light") ? (
+            <button onClick={() => sendToForceMachine({ type: "CORRUPT" })}>
+              Come to the Dark Side
+            </button>
+          ) : (
+            <button onClick={() => sendToForceMachine({ type: "REDEEM" })}>
+              Go Back to the Light Side
+            </button>
+          )}
           <List
             fetchData={fetchPeople}
-            selectedItem={matchingMachine.context.topSelectedItem}
-            onSelection={(selectedItem) =>
-              sendToMatchingMachine({ type: "SELECT_TOP", selectedItem })
-            }
-          />
+            selectedItem={matchingState.context.topSelectedItem}
+            onSelection={(selectedItem) => {
+              sendToMatchingMachine({ type: "SELECT_TOP", selectedItem });
+            }}
+            darkSidePower={darkSidePower}
+          ></List>
           <hr />
           <List
             fetchData={fetchPlanets}
@@ -38,7 +70,28 @@ function App() {
             onSelection={(selectedItem) => {
               sendToMatchingMachine({ type: "SELECT_BOTTOM", selectedItem });
             }}
+            darkSidePower={darkSidePower}
           ></List>
+        </>
+      ) : null}
+      {matchingState.matches("quiz.verifying") ? (
+        <>
+          <p>
+            You chose{" "}
+            {matchingState.context.topSelectedItem &&
+              matchingState.context.topSelectedItem.name}{" "}
+            and{" "}
+            {matchingState.context.bottomSelectedItem &&
+              matchingState.context.bottomSelectedItem.name}
+          </p>
+          <button
+            onClick={() => sendToMatchingMachine({ type: "CHANGE_ANSWERS" })}
+          >
+            Change Answers
+          </button>
+          <button onClick={() => sendToMatchingMachine({ type: "SUBMIT" })}>
+            Submit
+          </button>
         </>
       ) : null}
       {matchingState.matches("submitted.correct") ? (
