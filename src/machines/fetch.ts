@@ -36,6 +36,7 @@ interface FetchContext {
 
 export default createMachine<FetchContext, FetchMachineEvents, FetchStates>(
   {
+    predictableActionArguments: true,
     id: "fetch",
     initial: "idle",
     context: {
