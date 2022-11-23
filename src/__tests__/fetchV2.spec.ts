@@ -1,6 +1,7 @@
 /* eslint-disable jest/no-conditional-expect */
 import { interpret } from "xstate";
-import fetchMachine from "../machines/fetch";
+import { People } from "../api/mock-data";
+import fetchMachine from "../machines/fetchV2";
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -24,35 +25,20 @@ describe("transition", () => {
     expect(actualState.matches(expectedValue)).toBeTruthy();
     expect(actualState.value).toBe(expectedValue);
   });
-
-  test('should reach "failed" when action "REJECT"', () => {
-    const expectedValue = "failed";
-    const actualState = fetchMachine.transition("pending", { type: "REJECT" });
-    expect(actualState.value).toBe(expectedValue);
-    expect(actualState.matches(expectedValue)).toBeTruthy();
-  });
-
-  test('should reach "successful" when action "RESOLVE"', () => {
-    const expectedValue = "successful";
-    const actualState = fetchMachine.transition("pending", { type: "RESOLVE" });
-    expect(actualState.value).toBe(expectedValue);
-    expect(actualState.matches(expectedValue)).toBeTruthy();
-  });
 });
 
-describe("Testing async service with mockConfig", () => {
+describe("Testing services", () => {
   let mockFetchMachine;
   let message = "cannot load data";
-  let results = [{ name: "R2D2" }] as unknown as People;
+  let results = [{ name: "R2D2" }] as unknown as People[];
 
   test('should eventually reach "successful"', (done) => {
     mockFetchMachine = fetchMachine.withConfig({
-      actions: {
+      services: {
         fetchData: (_, event) =>
           new Promise((resolve) => {
             setTimeout(() => {
               resolve(results);
-              fetchService.send({ type: "RESOLVE", results });
             }, 50);
           }),
       },
@@ -76,13 +62,11 @@ describe("Testing async service with mockConfig", () => {
 
   test('should eventually reach "failed"', (done) => {
     mockFetchMachine = fetchMachine.withConfig({
-      services: {},
-      actions: {
+      services: {
         fetchData: (_, event) =>
           new Promise((resolve, reject) => {
             setTimeout(() => {
-              fetchService.send({ type: "REJECT", message });
-              resolve(message);
+              reject(message);
             }, 50);
           }),
       },

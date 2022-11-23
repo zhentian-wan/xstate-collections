@@ -4,7 +4,7 @@ import "./App.css";
 import { useMachine } from "@xstate/react";
 import { inspect } from "@xstate/inspect";
 
-import fetchMachine from "./machines/fetch";
+import fetchMachine from "./machines/fetchV2";
 import { fetchPeople } from "./api";
 
 inspect();
@@ -16,20 +16,9 @@ export interface Person {
 
 function App() {
   const [fetchState, sendToFetchMachine] = useMachine(fetchMachine, {
-    actions: {
+    services: {
       fetchData: (ctx, event) => {
-        fetchPeople()
-          .then((r) => {
-            return r.results;
-          })
-          .then(
-            (res) => {
-              sendToFetchMachine({ type: "RESOLVE", results: res });
-            },
-            (message) => {
-              sendToFetchMachine({ type: "REJECT", message });
-            }
-          );
+        return fetchPeople().then((r) => r.results);
       },
     },
     devTools: true,
