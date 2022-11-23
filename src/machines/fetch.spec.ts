@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 import { interpret } from "xstate";
 import fetchMachine from "./fetch";
 
@@ -55,7 +56,11 @@ describe("Testing async service", () => {
     const fetchService = interpret(mockFetchMachine).onTransition((state) => {
       // this is where you expect the state to eventually
       // be reached
+      console.log("state", state.value, state.context);
+
       if (state.matches("successful")) {
+        expect(state.context.results.length).toBe(1);
+        expect(state.context.results[0]["name"]).toBe(results[0]["name"]);
         done();
       }
     });
@@ -84,6 +89,7 @@ describe("Testing async service", () => {
       // this is where you expect the state to eventually
       // be reached
       if (state.matches("failed")) {
+        expect(state.context.message).toEqual(message);
         done();
       }
     });
