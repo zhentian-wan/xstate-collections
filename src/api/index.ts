@@ -9,7 +9,7 @@ function randomizedDelay<T>(maxDelay: number, callback: () => T): Promise<T> {
 }
 
 function randomizedError<T>(errorRate: number, callback: () => T): Promise<T> {
-  if (Math.random() < errorRate) {
+  if (Math.random() * 100 < errorRate) {
     return Promise.reject(
       "500 Error!  I sense a great disturbance in the network."
     );
@@ -18,7 +18,7 @@ function randomizedError<T>(errorRate: number, callback: () => T): Promise<T> {
   }
 }
 
-const DEFAULT_MAX_DELAY = 3000;
+const DEFAULT_MAX_DELAY = 1000;
 const DEFAULT_ERROR_RATE = 0.5;
 
 export function mockFetch<T>(
