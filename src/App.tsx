@@ -4,7 +4,7 @@ import "./App.css";
 import { useMachine } from "@xstate/react";
 import { inspect } from "@xstate/inspect";
 
-import fetchMachine from "./machines/fetchV2";
+import fetchMachine from "./machines/fetchV3";
 import { fetchPeople } from "./api";
 
 inspect();
@@ -30,13 +30,16 @@ function App() {
         Fetch
       </button>
       {fetchState.matches("pending") ? <p>Loading</p> : null}
-      {fetchState.matches("successful") ? (
+      {fetchState.matches("successful.withData") ? (
         <ul>
           {fetchState.context.results &&
             fetchState.context.results.map((person, index) => (
               <li key={index}>{person.name}</li>
             ))}
         </ul>
+      ) : null}
+      {fetchState.matches("successful.withoutData") ? (
+        <p>No data available</p>
       ) : null}
       {fetchState.matches("failed") ? (
         <p>{fetchState.context.message}</p>

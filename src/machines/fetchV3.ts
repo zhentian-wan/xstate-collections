@@ -16,8 +16,25 @@ type FetchStates =
         message: "";
       };
     }
+  | SuccessfulStates;
+
+type SuccessfulStates =
   | {
-      value: "successful";
+      value: "successful.withData";
+      context: FetchContext & {
+        results: [];
+        message: "";
+      };
+    }
+  | {
+      value: "successful.withoutData";
+      context: FetchContext & {
+        results: [];
+        message: "";
+      };
+    }
+  | {
+      value: "successful.unknown";
       context: FetchContext & {
         results: [];
         message: "";
@@ -50,7 +67,10 @@ export default createMachine<FetchContext, FetchMachineEvents, FetchStates>(
         invoke: {
           src: "fetchData", // component defines the service
           //src: () => {}, // inline service
-          onDone: { target: "successful", actions: ["setResults"] },
+          onDone: {
+            target: "successful",
+            actions: ["setResults"],
+          },
           onError: { target: "failed", actions: ["setMessage"] },
         },
       },
@@ -60,8 +80,22 @@ export default createMachine<FetchContext, FetchMachineEvents, FetchStates>(
         },
       },
       successful: {
+        initial: "unknown",
         on: {
           FETCH: "pending",
+        },
+        states: {
+          unknown: {
+            on: {
+              // once enter 'successful' state, will start from here
+              "": [
+                { target: "withData", cond: "hasData" },
+                { target: "withoutData" },
+              ],
+            },
+          },
+          withData: {},
+          withoutData: {},
         },
       },
     },
@@ -74,6 +108,11 @@ export default createMachine<FetchContext, FetchMachineEvents, FetchStates>(
       setMessage: assign((ctx, event: any) => ({
         message: event.data,
       })),
+    },
+    guards: {
+      hasData: (ctx: FetchContext, event: any) => {
+        return ctx.results && ctx.results.length > 0;
+      },
     },
   }
 );
