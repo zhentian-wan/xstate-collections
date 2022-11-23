@@ -244,6 +244,7 @@ export const people = {
     },
   ],
 };
+export type People = Partial<typeof people.results>;
 
 export const planets = {
   count: 61,

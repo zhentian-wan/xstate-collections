@@ -1,6 +1,10 @@
 /* eslint-disable jest/no-conditional-expect */
 import { interpret } from "xstate";
-import fetchMachine from "./fetch";
+import fetchMachine from "../machines/fetch";
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
 
 describe("transition", () => {
   test('should reach "pending" when action "FETCH"', () => {
@@ -36,11 +40,10 @@ describe("transition", () => {
   });
 });
 
-describe("Testing async service", () => {
+describe("Testing async service with mockConfig", () => {
   let mockFetchMachine;
   let message = "cannot load data";
-  let results = [{ name: "R2D2" }];
-  beforeEach(() => {});
+  let results = [{ name: "R2D2" }] as unknown as People;
 
   test('should eventually reach "successful"', (done) => {
     mockFetchMachine = fetchMachine.withConfig({
@@ -49,6 +52,7 @@ describe("Testing async service", () => {
           new Promise((resolve) => {
             setTimeout(() => {
               resolve(results);
+              fetchService.send({ type: "RESOLVE", results });
             }, 50);
           }),
       },
@@ -56,8 +60,6 @@ describe("Testing async service", () => {
     const fetchService = interpret(mockFetchMachine).onTransition((state) => {
       // this is where you expect the state to eventually
       // be reached
-      console.log("state", state.value, state.context);
-
       if (state.matches("successful")) {
         expect(state.context.results.length).toBe(1);
         expect(state.context.results[0]["name"]).toBe(results[0]["name"]);
@@ -70,7 +72,6 @@ describe("Testing async service", () => {
     // send zero or more events to the service that should
     // cause it to eventually reach its expected state
     fetchService.send({ type: "FETCH" });
-    fetchService.send({ type: "RESOLVE", results });
   });
 
   test('should eventually reach "failed"', (done) => {
@@ -80,7 +81,8 @@ describe("Testing async service", () => {
         fetchData: (_, event) =>
           new Promise((resolve, reject) => {
             setTimeout(() => {
-              reject(message);
+              fetchService.send({ type: "REJECT", message });
+              resolve(message);
             }, 50);
           }),
       },
@@ -99,6 +101,5 @@ describe("Testing async service", () => {
     // send zero or more events to the service that should
     // cause it to eventually reach its expected state
     fetchService.send({ type: "FETCH" });
-    fetchService.send({ type: "REJECT", message });
   });
 });

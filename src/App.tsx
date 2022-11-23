@@ -19,7 +19,9 @@ function App() {
     actions: {
       fetchData: (ctx, event) => {
         fetchPeople()
-          .then((r) => r.results)
+          .then((r) => {
+            return r.results;
+          })
           .then(
             (res) => {
               sendToFetchMachine({ type: "RESOLVE", results: res });
